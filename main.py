@@ -2,7 +2,7 @@
 import streamlit as st
 
 # Import transformer classes for generaiton
-from transformers import AutoTokenizer, AutoModelForCausalLM, TextStreamer
+from transformers import AutoTokenizer, AutoModelForCausalLM
 # Import torch for datatype attributes 
 import torch
 # Import the prompt wrapper...but for llama index
@@ -21,19 +21,19 @@ from llama_index import VectorStoreIndex, download_loader
 from pathlib import Path
 
 # Define variable to hold llama2 weights naming 
-name = "meta-llama/Llama-2-70b-chat-hf"
+name = "meta-llama/Llama-2-7b-chat-hf"
 # Set auth token variable from hugging face 
-auth_token = "YOUR HUGGING FACE AUTH TOKEN HERE"
+auth_token = "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"
 
 @st.cache_resource
 def get_tokenizer_model():
     # Create tokenizer
-    tokenizer = AutoTokenizer.from_pretrained(name, cache_dir='./model/', use_auth_token=auth_token)
+    tokenizer = AutoTokenizer.from_pretrained(name, cache_dir='./model/', use_auth_token=auth_token,return_token_type_ids=False)
 
     # Create model
     model = AutoModelForCausalLM.from_pretrained(name, cache_dir='./model/'
-                            , use_auth_token=auth_token, torch_dtype=torch.float16, 
-                            rope_scaling={"type": "dynamic", "factor": 2}, load_in_8bit=True) 
+                            , use_auth_token=auth_token, torch_dtype=torch.float32, 
+                            rope_scaling={"type": "dynamic", "factor": 2}) 
 
     return tokenizer, model
 tokenizer, model = get_tokenizer_model()
@@ -56,7 +56,7 @@ the company.<</SYS>>
 query_wrapper_prompt = SimpleInputPrompt("{query_str} [/INST]")
 
 # Create a HF LLM using the llama index wrapper 
-llm = HuggingFaceLLM(context_window=4096,
+llm = HuggingFaceLLM(context_window=1024,
                     max_new_tokens=256,
                     system_prompt=system_prompt,
                     query_wrapper_prompt=query_wrapper_prompt,
@@ -94,9 +94,11 @@ st.title('🦙 Llama Banker')
 # Create a text input box for the user
 prompt = st.text_input('Input your prompt here')
 
+print(prompt)
 # If the user hits enter
 if prompt:
     response = query_engine.query(prompt)
+    print(response)
     # ...and write it out to the screen
     st.write(response)
 
